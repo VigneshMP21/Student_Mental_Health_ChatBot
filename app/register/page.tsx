@@ -2,12 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { validateEmail, validatePassword } from "@/utils/security";
-import { getAppUrl } from "@/utils/url";
 import Button from "@/components/ui/Button";
-import { Brain, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Brain, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -17,8 +14,6 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
-  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,34 +35,35 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
-    const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { name: name.trim() },
-        emailRedirectTo: getAppUrl("/login"),
-      },
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name.trim(), email, password }),
     });
+    const data: { error?: string } = await res.json().catch(() => ({}));
 
-    if (authError) {
-      setError(authError.message);
+    if (!res.ok) {
+      setError(data.error || "Failed to create account");
       setLoading(false);
       return;
     }
 
-    if (data.user && !data.session) {
-      setSuccess("Check your email to verify your account before signing in.");
-      setLoading(false);
-      return;
-    }
-
-    router.push("/dashboard");
-    router.refresh();
+    setSuccess("Check your email to verify your account before signing in.");
+    setPassword("");
+    setLoading(false);
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
+        <Link
+          href="/"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-colors hover:text-primary-600"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Back to home
+        </Link>
+
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 text-white">

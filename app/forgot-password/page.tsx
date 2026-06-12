@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { validateEmail } from "@/utils/security";
-import { getAppUrl } from "@/utils/url";
 import Button from "@/components/ui/Button";
 import { Brain, Mail, ArrowLeft } from "lucide-react";
 
@@ -13,7 +11,6 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,12 +22,15 @@ export default function ForgotPasswordPage() {
     }
 
     setLoading(true);
-    const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: getAppUrl("/reset-password"),
+    const res = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
     });
+    const data: { error?: string } = await res.json().catch(() => ({}));
 
-    if (authError) {
-      setError(authError.message);
+    if (!res.ok) {
+      setError(data.error || "Failed to send reset link");
       setLoading(false);
       return;
     }
