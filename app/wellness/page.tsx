@@ -15,6 +15,9 @@ import {
   Sparkles,
   Zap,
   ArrowLeft,
+  RefreshCw,
+  Send,
+  X,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -32,15 +35,23 @@ export default function WellnessPage() {
   const [messages, setMessages] = useState<ChatUIMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [context, setContext] = useState("");
+  const [showRegenerateInput, setShowRegenerateInput] = useState(false);
 
   const generateSuggestion = async () => {
     if (!selectedCategory || isLoading) return;
 
     setIsLoading(true);
+    setShowRegenerateInput(false);
+    const categoryLabel =
+      WELLNESS_CATEGORIES.find((c) => c.id === selectedCategory)?.label.toLowerCase() ||
+      "wellness";
+    const trimmedContext = context.trim();
     const userMsg: ChatUIMessage = {
       id: `user-${Date.now()}`,
       role: "user",
-      content: `I'd like ${WELLNESS_CATEGORIES.find((c) => c.id === selectedCategory)?.label.toLowerCase()} suggestions.`,
+      content: trimmedContext
+        ? `I'd like ${categoryLabel} suggestions.\n\n${trimmedContext}`
+        : `I'd like ${categoryLabel} suggestions.`,
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, userMsg]);
@@ -52,7 +63,7 @@ export default function WellnessPage() {
         body: JSON.stringify({
           message: userMsg.content,
           wellnessCategory: selectedCategory,
-          context: context || undefined,
+          context: trimmedContext || undefined,
           persist: false,
         }),
       });
@@ -88,6 +99,7 @@ export default function WellnessPage() {
     setSelectedCategory(null);
     setMessages([]);
     setContext("");
+    setShowRegenerateInput(false);
   };
 
   if (selectedCategory) {
@@ -116,7 +128,13 @@ export default function WellnessPage() {
           </div>
 
           {messages.length === 0 && (
-            <div className="card space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                generateSuggestion();
+              }}
+              className="card space-y-4"
+            >
               <label htmlFor="wellness-context" className="block text-sm font-medium text-slate-700">
                 Tell us about your situation (optional)
               </label>
@@ -128,21 +146,63 @@ export default function WellnessPage() {
                 rows={3}
                 placeholder="e.g., I have finals next week and can't sleep..."
               />
-              <Button onClick={generateSuggestion} loading={isLoading}>
+              <Button type="submit" loading={isLoading}>
                 Generate Suggestions
               </Button>
-            </div>
+            </form>
           )}
 
           {messages.length > 0 && (
-            <div className="glass rounded-2xl overflow-hidden">
-              <div className="max-h-[500px] overflow-y-auto scrollbar-thin p-4">
-                <ChatMessages messages={messages} isLoading={isLoading} />
-              </div>
+            <div className="glass flex h-[68vh] min-h-[520px] max-h-[760px] flex-col overflow-hidden">
+              <ChatMessages messages={messages} isLoading={isLoading} />
               <div className="border-t border-slate-200/50 p-4">
-                <Button onClick={generateSuggestion} loading={isLoading} variant="secondary">
-                  Regenerate Suggestions
-                </Button>
+                {showRegenerateInput ? (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      generateSuggestion();
+                    }}
+                    className="space-y-3"
+                  >
+                    <label htmlFor="wellness-regenerate-context" className="block text-sm font-medium text-slate-700">
+                      Additional context
+                    </label>
+                    <textarea
+                      id="wellness-regenerate-context"
+                      value={context}
+                      onChange={(e) => setContext(e.target.value)}
+                      className="input-field min-h-24 resize-none"
+                      rows={3}
+                      placeholder="Add details for the next suggestion..."
+                      autoFocus
+                    />
+                    <div className="flex flex-wrap gap-3">
+                      <Button type="submit" loading={isLoading}>
+                        <Send className="h-4 w-4" aria-hidden="true" />
+                        Send
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        disabled={isLoading}
+                        onClick={() => setShowRegenerateInput(false)}
+                      >
+                        <X className="h-4 w-4" aria-hidden="true" />
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={() => setShowRegenerateInput(true)}
+                    loading={isLoading}
+                    variant="secondary"
+                  >
+                    <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                    Regenerate Suggestions
+                  </Button>
+                )}
               </div>
             </div>
           )}
