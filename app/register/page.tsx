@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { validateEmail, validatePassword } from "@/utils/security";
+import { getAppUrl } from "@/utils/url";
 import Button from "@/components/ui/Button";
 import { Brain, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 
@@ -44,7 +45,7 @@ export default function RegisterPage() {
       password,
       options: {
         data: { name: name.trim() },
-        emailRedirectTo: `${window.location.origin}/login`,
+        emailRedirectTo: getAppUrl("/login"),
       },
     });
 

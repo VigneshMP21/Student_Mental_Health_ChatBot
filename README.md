@@ -79,7 +79,15 @@ Open [http://localhost:3000](http://localhost:3000).
    - `NEXT_PUBLIC_APP_URL` (your production URL)
 4. Deploy
 
-Update Supabase Auth redirect URLs to include your Vercel domain.
+Update Supabase Auth URL settings:
+
+- Site URL: `https://student-mental-health-chat-bot.vercel.app`
+- Redirect URLs:
+  - `https://student-mental-health-chat-bot.vercel.app/login`
+  - `https://student-mental-health-chat-bot.vercel.app/reset-password`
+  - `http://localhost:3000/**` for local testing
+
+If you customized the Supabase email templates, make sure confirmation and reset links use the redirect URL/confirmation URL from Supabase instead of a hard-coded localhost URL.
 
 ## Project Structure
 
