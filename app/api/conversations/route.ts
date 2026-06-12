@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { sanitizeInput } from "@/utils/security";
 
 export async function GET() {
   try {
@@ -55,5 +56,45 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error("Delete conversation error:", error);
     return NextResponse.json({ error: "Failed to delete conversation" }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id, title } = await request.json();
+    if (!id) {
+      return NextResponse.json({ error: "Conversation ID required" }, { status: 400 });
+    }
+
+    const sanitizedTitle = sanitizeInput(String(title ?? "")).slice(0, 100);
+    if (!sanitizedTitle) {
+      return NextResponse.json({ error: "Title cannot be empty" }, { status: 400 });
+    }
+
+    const { data: conversation, error } = await supabase
+      .from("conversations")
+      .update({ title: sanitizedTitle })
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .select()
+      .single();
+
+    if (error || !conversation) {
+      return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ conversation });
+  } catch (error) {
+    console.error("Rename conversation error:", error);
+    return NextResponse.json({ error: "Failed to rename conversation" }, { status: 500 });
   }
 }
