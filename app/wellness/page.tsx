@@ -53,6 +53,7 @@ export default function WellnessPage() {
           message: userMsg.content,
           wellnessCategory: selectedCategory,
           context: context || undefined,
+          persist: false,
         }),
       });
 

@@ -19,6 +19,7 @@ const chatSchema = z.object({
   conversationId: z.string().uuid().nullable().optional(),
   wellnessCategory: z.string().optional(),
   context: z.string().optional(),
+  persist: z.boolean().optional().default(true),
 });
 
 export async function POST(request: NextRequest) {
@@ -47,14 +48,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request data" }, { status: 400 });
     }
 
-    const { message, history, conversationId, wellnessCategory, context } = parsed.data;
+    const { message, history, conversationId, wellnessCategory, context, persist } = parsed.data;
     const sanitizedMessage = sanitizeInput(message);
 
     if (!sanitizedMessage) {
       return NextResponse.json({ error: "Message cannot be empty" }, { status: 400 });
     }
 
-    await ensureUserRecords(supabase, user);
+    if (persist) {
+      await ensureUserRecords(supabase, user);
+    }
 
     const aiResponse = await generateWithTimeout({
       message: sanitizedMessage,
@@ -62,6 +65,13 @@ export async function POST(request: NextRequest) {
       wellnessCategory,
       context,
     });
+
+    if (!persist) {
+      return NextResponse.json({
+        response: aiResponse,
+        conversationId: null,
+      });
+    }
 
     let convId = conversationId;
 
