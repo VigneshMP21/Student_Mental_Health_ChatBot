@@ -40,13 +40,16 @@ export async function POST(request: NextRequest) {
 
     const email = parsed.data.email.toLowerCase();
     const supabase = createAdminClient();
+    const redirectToUrl = getAppUrl("/reset-password");
+    console.log("Forgot password generateLink redirect URL:", redirectToUrl);
     const { data, error } = await supabase.auth.admin.generateLink({
       type: "recovery",
       email,
       options: {
-        redirectTo: getAppUrl("/reset-password"),
+        redirectTo: redirectToUrl,
       },
     });
+    console.log("Forgot password generated action_link:", data?.properties?.action_link);
 
     if (error) {
       if (isUnknownUserError(error)) {
