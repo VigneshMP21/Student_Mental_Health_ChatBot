@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateWithTimeout } from "@/lib/gemini/client";
 import { checkRateLimit, sanitizeInput } from "@/utils/security";
+import type { User } from "@supabase/supabase-js";
 import { z } from "zod";
 
 const chatSchema = z.object({
@@ -53,6 +54,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Message cannot be empty" }, { status: 400 });
     }
 
+    await ensureUserRecords(supabase, user);
+
     const aiResponse = await generateWithTimeout({
       message: sanitizedMessage,
       history,
@@ -97,6 +100,42 @@ export async function POST(request: NextRequest) {
         : "Failed to generate response. Please try again.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
+}
+
+async function ensureUserRecords(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  user: User
+) {
+  const email = user.email ?? "";
+  const name =
+    typeof user.user_metadata?.name === "string" && user.user_metadata.name.trim()
+      ? user.user_metadata.name.trim()
+      : email.split("@")[0] || "Student";
+  const avatar =
+    typeof user.user_metadata?.avatar_url === "string" ? user.user_metadata.avatar_url : null;
+
+  const { error: profileError } = await supabase.from("users").upsert(
+    {
+      id: user.id,
+      name,
+      email,
+      avatar,
+    },
+    { onConflict: "id", ignoreDuplicates: true }
+  );
+
+  if (profileError) throw profileError;
+
+  const { error: streakError } = await supabase.from("wellness_streaks").upsert(
+    {
+      user_id: user.id,
+      current_streak: 0,
+      longest_streak: 0,
+    },
+    { onConflict: "user_id", ignoreDuplicates: true }
+  );
+
+  if (streakError) throw streakError;
 }
 
 async function updateWellnessStreak(

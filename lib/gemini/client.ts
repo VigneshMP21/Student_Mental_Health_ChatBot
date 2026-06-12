@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { SYSTEM_PROMPT, buildChatPrompt, buildWellnessPrompt } from "./prompts";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 
 export interface GenerateOptions {
   message: string;
@@ -10,15 +10,25 @@ export interface GenerateOptions {
   context?: string;
 }
 
-export async function generateResponse(options: GenerateOptions): Promise<string> {
-  const { message, history = [], wellnessCategory, context } = options;
+function getGeminiModelName() {
+  return process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
+}
 
-  if (!process.env.GEMINI_API_KEY) {
+function getGeminiClient() {
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+
+  if (!apiKey) {
     throw new Error("Gemini API key is not configured");
   }
 
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+  return new GoogleGenerativeAI(apiKey);
+}
+
+export async function generateResponse(options: GenerateOptions): Promise<string> {
+  const { message, history = [], wellnessCategory, context } = options;
+
+  const model = getGeminiClient().getGenerativeModel({
+    model: getGeminiModelName(),
     systemInstruction: SYSTEM_PROMPT,
   });
 

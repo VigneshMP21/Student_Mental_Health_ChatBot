@@ -57,6 +57,7 @@ Fill in your values:
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.5-flash
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
@@ -76,6 +77,7 @@ Open [http://localhost:3000](http://localhost:3000).
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `GEMINI_API_KEY`
+   - `GEMINI_MODEL` (optional, defaults to `gemini-2.5-flash`)
    - `NEXT_PUBLIC_APP_URL` (your production URL)
 4. Deploy
 
