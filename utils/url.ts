@@ -18,6 +18,7 @@ export function getAppUrl(path = "") {
     normalizeBaseUrl(process.env.NEXT_PUBLIC_APP_URL) ||
     normalizeBaseUrl(process.env.NEXT_PUBLIC_SITE_URL) ||
     normalizeBaseUrl(process.env.NEXT_PUBLIC_VERCEL_URL) ||
+    normalizeBaseUrl(process.env.VERCEL_URL) ||
     (typeof window !== "undefined"
       ? normalizeBaseUrl(window.location.origin)
       : "http://localhost:3000/");
