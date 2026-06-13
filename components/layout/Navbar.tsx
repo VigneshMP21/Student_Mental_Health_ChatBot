@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface NavbarProps {
   variant?: "landing" | "app";
@@ -27,6 +28,11 @@ export default function Navbar({ variant = "landing" }: NavbarProps) {
 
 function LandingNav() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (menuOpen) {
@@ -70,7 +76,7 @@ function LandingNav() {
         <Menu className="h-6 w-6" />
       </button>
 
-      {menuOpen && (
+      {menuOpen && mounted && createPortal(
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/30" onClick={() => setMenuOpen(false)} />
           <div className="absolute right-0 top-0 flex h-full w-72 max-w-[80vw] flex-col rounded-l-2xl p-6 shadow-2xl animate-slide-up" style={{ backgroundColor: "#ffffff", backgroundImage: "none" }}>
@@ -103,7 +109,8 @@ function LandingNav() {
               </Link>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
