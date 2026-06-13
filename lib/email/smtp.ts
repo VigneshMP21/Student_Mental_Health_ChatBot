@@ -2,13 +2,12 @@ import "server-only";
 
 import nodemailer from "nodemailer";
 
-type AuthEmailParams = {
+type OtpEmailParams = {
   to: string;
   subject: string;
   title: string;
   intro: string;
-  buttonText: string;
-  actionUrl: string;
+  otp: string;
 };
 
 function getRequiredEnv(name: string) {
@@ -66,18 +65,11 @@ function createTransport() {
   });
 }
 
-export async function sendAuthEmail({
-  to,
-  subject,
-  title,
-  intro,
-  buttonText,
-  actionUrl,
-}: AuthEmailParams) {
+export async function sendOtpEmail({ to, subject, title, intro, otp }: OtpEmailParams) {
   const appName = process.env.APP_NAME?.trim() || "MindWell";
   const from = process.env.SMTP_FROM?.trim() || `${appName} <${getRequiredEnv("SMTP_USER")}>`;
-  const escapedActionUrl = escapeHtml(actionUrl);
   const escapedAppName = escapeHtml(appName);
+  const escapedOtp = escapeHtml(otp);
 
   const html = `<!doctype html>
 <html lang="en">
@@ -92,9 +84,9 @@ export async function sendAuthEmail({
         <p style="margin:0 0 16px;color:#2563eb;font-size:14px;font-weight:700;">${escapedAppName}</p>
         <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;color:#0f172a;">${escapeHtml(title)}</h1>
         <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#475569;">${escapeHtml(intro)}</p>
-        <a href="${escapedActionUrl}" style="display:inline-block;border-radius:12px;background:#2563eb;color:#ffffff;padding:12px 18px;text-decoration:none;font-size:14px;font-weight:700;">${escapeHtml(buttonText)}</a>
-        <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#64748b;">If the button does not work, copy and paste this link into your browser:</p>
-        <p style="margin:8px 0 0;word-break:break-all;font-size:13px;line-height:1.6;color:#2563eb;">${escapedActionUrl}</p>
+        <p style="margin:0 0 8px;font-size:13px;font-weight:700;text-transform:uppercase;color:#64748b;">Verification code</p>
+        <p style="margin:0;border-radius:12px;background:#eff6ff;border:1px solid #bfdbfe;padding:16px;text-align:center;font-size:28px;font-weight:700;color:#1d4ed8;">${escapedOtp}</p>
+        <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#64748b;">If you did not request this code, you can ignore this email.</p>
       </div>
     </div>
   </body>
@@ -104,9 +96,9 @@ export async function sendAuthEmail({
 
 ${intro}
 
-${buttonText}: ${actionUrl}
+Verification code: ${otp}
 
-If you did not request this email, you can ignore it.`;
+If you did not request this code, you can ignore this email.`;
 
   await createTransport().sendMail({
     from,

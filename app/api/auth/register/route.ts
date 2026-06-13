@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { sendAuthEmail } from "@/lib/email/smtp";
+import { sendOtpEmail } from "@/lib/email/smtp";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sanitizeInput, validatePassword } from "@/utils/security";
 import { getAppUrl } from "@/utils/url";
@@ -194,8 +194,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    if (!data.properties?.action_link || !data.user?.id) {
-      throw new Error("Supabase did not return a signup verification link");
+    if (!data.properties?.email_otp || !data.user?.id) {
+      throw new Error("Supabase did not return a signup verification code");
     }
 
     createdUserId = data.user.id;
@@ -207,13 +207,12 @@ export async function POST(request: NextRequest) {
       email,
     });
 
-    await sendAuthEmail({
+    await sendOtpEmail({
       to: email,
       subject: "Verify your MindWell account",
       title: "Verify your email address",
-      intro: "Use the secure link below to verify your email address and finish creating your MindWell account.",
-      buttonText: "Verify account",
-      actionUrl: data.properties.action_link,
+      intro: "Enter this code in MindWell to verify your email address and finish creating your account.",
+      otp: data.properties.email_otp,
     });
 
     return NextResponse.json({ success: true });

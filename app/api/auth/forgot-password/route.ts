@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { sendAuthEmail } from "@/lib/email/smtp";
+import { sendOtpEmail } from "@/lib/email/smtp";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAppUrl } from "@/utils/url";
 
 export const runtime = "nodejs";
 
 const forgotPasswordSchema = z.object({
   email: z.string().trim().email(),
 });
+
+type SupabaseAdminClient = ReturnType<typeof createAdminClient>;
 
 function getPublicError(error: unknown) {
   const message = error instanceof Error ? error.message : "";
@@ -21,12 +22,32 @@ function getPublicError(error: unknown) {
     return "Email service is not configured. Check SMTP and Supabase service-role environment variables.";
   }
 
-  return "Failed to send reset link. Please try again.";
+  return "Failed to send reset code. Please try again.";
 }
 
-function isUnknownUserError(error: unknown) {
-  const message = error instanceof Error ? error.message.toLowerCase() : "";
-  return message.includes("not found") || message.includes("does not exist");
+async function findAuthUserByEmail(supabase: SupabaseAdminClient, email: string) {
+  const perPage = 1000;
+  let page = 1;
+
+  while (page) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
+
+    if (error) {
+      throw error;
+    }
+
+    const user = data.users.find(
+      (candidate) => candidate.email?.toLowerCase() === email
+    );
+
+    if (user || !data.nextPage) {
+      return user ?? null;
+    }
+
+    page = data.nextPage;
+  }
+
+  return null;
 }
 
 export async function POST(request: NextRequest) {
@@ -40,34 +61,34 @@ export async function POST(request: NextRequest) {
 
     const email = parsed.data.email.toLowerCase();
     const supabase = createAdminClient();
-    const redirectToUrl = getAppUrl("/reset-password", request.nextUrl.origin);
+    const user = await findAuthUserByEmail(supabase, email);
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "No account found with this email address." },
+        { status: 404 }
+      );
+    }
+
     const { data, error } = await supabase.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: {
-        redirectTo: redirectToUrl,
-      },
     });
 
     if (error) {
-      if (isUnknownUserError(error)) {
-        return NextResponse.json({ success: true });
-      }
-
       throw error;
     }
 
-    if (!data.properties?.action_link) {
-      throw new Error("Supabase did not return a password recovery link");
+    if (!data.properties?.email_otp) {
+      throw new Error("Supabase did not return a password reset code");
     }
 
-    await sendAuthEmail({
+    await sendOtpEmail({
       to: email,
       subject: "Reset your MindWell password",
       title: "Reset your password",
-      intro: "Use the secure link below to choose a new password for your MindWell account.",
-      buttonText: "Reset password",
-      actionUrl: data.properties.action_link,
+      intro: "Enter this code in MindWell to verify your account before choosing a new password.",
+      otp: data.properties.email_otp,
     });
 
     return NextResponse.json({ success: true });

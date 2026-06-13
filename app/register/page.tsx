@@ -2,35 +2,52 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 import { validateEmail, validatePassword } from "@/utils/security";
 import Button from "@/components/ui/Button";
-import { ArrowLeft, Brain, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Brain, Mail, Lock, User, Eye, EyeOff, KeyRound, CheckCircle } from "lucide-react";
+
+type RegisterStage = "details" | "otp";
 
 export default function RegisterPage() {
-  const [name, setName] = useState("");
+  const [stage, setStage] = useState<RegisterStage>("details");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [message, setMessage] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const supabase = createClient();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
+    setMessage("");
 
-    if (!name.trim()) {
-      setError("Please enter your name");
+    if (!username.trim()) {
+      setError("Please enter your username");
       return;
     }
-    if (!validateEmail(email)) {
+
+    if (!validateEmail(normalizedEmail)) {
       setError("Please enter a valid email address");
       return;
     }
+
     const pwCheck = validatePassword(password);
     if (!pwCheck.valid) {
       setError(pwCheck.message!);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
       return;
     }
 
@@ -38,7 +55,11 @@ export default function RegisterPage() {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim(), email, password }),
+      body: JSON.stringify({
+        name: username.trim(),
+        email: normalizedEmail,
+        password,
+      }),
     });
     const data: { error?: string } = await res.json().catch(() => ({}));
 
@@ -48,9 +69,41 @@ export default function RegisterPage() {
       return;
     }
 
-    setSuccess("Check your email to verify your account before signing in.");
+    setStage("otp");
+    setMessage(`We sent a verification code to ${normalizedEmail}.`);
+    setOtp("");
     setPassword("");
+    setConfirmPassword("");
     setLoading(false);
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+
+    const token = otp.trim();
+    if (token.length < 6) {
+      setError("Please enter the verification code from your email");
+      return;
+    }
+
+    setLoading(true);
+    const { data, error: verifyError } = await supabase.auth.verifyOtp({
+      email: normalizedEmail,
+      token,
+      type: "signup",
+    });
+
+    if (verifyError || !data.user) {
+      setError("Invalid or expired verification code");
+      setLoading(false);
+      return;
+    }
+
+    await supabase.auth.signOut();
+    setLoading(false);
+    setShowSuccess(true);
   };
 
   return (
@@ -71,56 +124,184 @@ export default function RegisterPage() {
             </div>
           </Link>
           <h1 className="text-2xl font-bold text-slate-900">Create your account</h1>
-          <p className="mt-2 text-sm text-slate-600">Start your wellness journey today</p>
+          <p className="mt-2 text-sm text-slate-600">
+            {stage === "details" ? "Enter your details to receive an OTP" : "Verify the OTP sent to your email"}
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="glass rounded-2xl p-8 shadow-xl space-y-5" noValidate>
+        <form
+          onSubmit={stage === "details" ? handleRegister : handleVerifyOtp}
+          className="glass rounded-2xl p-8 shadow-xl space-y-5"
+          noValidate
+        >
           {error && (
             <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700" role="alert">
               {error}
             </div>
           )}
-          {success && (
+          {message && (
             <div className="rounded-xl bg-green-50 border border-green-200 p-3 text-sm text-green-700" role="status">
-              {success}
+              {message}
             </div>
           )}
 
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
-              <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-field pl-10" placeholder="Your name" required autoComplete="name" />
-            </div>
-          </div>
+          {stage === "details" ? (
+            <>
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Username
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="input-field pl-10"
+                    placeholder="Your username"
+                    required
+                    autoComplete="username"
+                  />
+                </div>
+              </div>
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
-              <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-field pl-10" placeholder="you@university.edu" required autoComplete="email" />
-            </div>
-          </div>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="input-field pl-10"
+                    placeholder="you@university.edu"
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+              </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
-              <input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="input-field pl-10 pr-10" placeholder="Min 8 chars, 1 uppercase, 1 number" required autoComplete="new-password" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" aria-label={showPassword ? "Hide password" : "Show password"}>
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input-field pl-10 pr-10"
+                    placeholder="Min 8 chars, 1 uppercase, 1 number"
+                    required
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <input
+                    id="confirmPassword"
+                    type={showPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="input-field pl-10"
+                    placeholder="Re-enter your password"
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+              </div>
+
+              <Button type="submit" loading={loading} className="w-full">
+                Register
+              </Button>
+            </>
+          ) : (
+            <>
+              <div>
+                <label htmlFor="otp" className="block text-sm font-medium text-slate-700 mb-1.5">
+                  OTP
+                </label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <input
+                    id="otp"
+                    type="text"
+                    inputMode="numeric"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    className="input-field pl-10 text-center"
+                    placeholder="000000"
+                    required
+                    autoComplete="one-time-code"
+                  />
+                </div>
+              </div>
+
+              <Button type="submit" loading={loading} className="w-full">
+                Verify OTP
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStage("details");
+                  setError("");
+                  setMessage("");
+                  setOtp("");
+                }}
+                className="flex w-full items-center justify-center gap-2 text-sm text-primary-600 hover:text-primary-700"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Edit registration details
               </button>
-            </div>
-          </div>
-
-          <Button type="submit" loading={loading} className="w-full">Create Account</Button>
+            </>
+          )}
 
           <p className="text-center text-sm text-slate-600">
             Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-primary-600 hover:text-primary-700">Sign in</Link>
+            <Link href="/login" className="font-semibold text-primary-600 hover:text-primary-700">
+              Sign in
+            </Link>
           </p>
         </form>
       </div>
+
+      {showSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-2xl">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-600">
+              <CheckCircle className="h-7 w-7" aria-hidden="true" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Registration successful</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Your email has been verified. You can now sign in with your account.
+            </p>
+            <Link href="/login" className="btn-primary mt-6 w-full">
+              Go to Sign In
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
