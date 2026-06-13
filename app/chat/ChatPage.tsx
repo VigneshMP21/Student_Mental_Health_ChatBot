@@ -135,7 +135,7 @@ export default function ChatPage() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] max-w-4xl mx-auto">
+      <div className="flex flex-col min-h-[calc(100vh-4rem)] max-w-4xl mx-auto px-4 sm:px-0">
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-slate-900">Wellness Chat</h1>
           <p className="text-sm text-slate-500">Your AI companion for emotional support</p>
