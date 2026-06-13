@@ -36,7 +36,7 @@ export default function Sidebar() {
 
   const NavContent = () => (
     <>
-      <div className="flex items-center justify-between px-2 mb-8">
+      <div className="flex items-center justify-between px-2 mb-8 shrink-0">
         <div className="flex items-center gap-2">
           <Image src="/MindWell_logo.png" alt="MindWell" width={40} height={40} className="rounded-xl" />
           <span className="text-lg font-bold gradient-text">MindWell</span>
@@ -50,7 +50,7 @@ export default function Sidebar() {
         </button>
       </div>
 
-      <nav className="flex-1 space-y-1" aria-label="App navigation">
+      <nav className="flex-1 min-h-0 space-y-1 overflow-y-auto scrollbar-thin pr-1" aria-label="App navigation">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
@@ -73,7 +73,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-auto border-t border-slate-200/50 pt-4">
+      <div className="mt-auto border-t border-slate-200/50 pt-4 shrink-0">
         <div className="flex items-center gap-3 px-2 mb-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-accent-400 text-xs font-bold text-white">
             {profile?.avatar ? (
@@ -129,7 +129,7 @@ export default function Sidebar() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col h-screen max-h-screen bg-white p-4 shadow-2xl transition-transform duration-300 overflow-y-auto lg:translate-x-0 lg:glass",
+          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col h-[100dvh] max-h-[100dvh] bg-white p-4 shadow-2xl transition-transform duration-300 lg:translate-x-0 lg:glass",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
         aria-label="Sidebar"
