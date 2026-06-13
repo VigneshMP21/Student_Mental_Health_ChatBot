@@ -108,7 +108,7 @@ export default function WellnessPage() {
 
     return (
       <AppLayout>
-        <div className="max-w-full mx-auto space-y-6">
+        <div className="w-full space-y-6">
           <button
             onClick={handleBack}
             className="flex items-center gap-2 text-sm text-slate-600 hover:text-primary-600 transition-colors"

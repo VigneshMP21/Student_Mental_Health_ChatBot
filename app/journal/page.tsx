@@ -91,7 +91,7 @@ export default function JournalPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-full mx-auto space-y-6">
+      <div className="w-full space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Daily Journal</h1>

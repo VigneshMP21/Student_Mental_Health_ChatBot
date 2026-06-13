@@ -13,7 +13,7 @@ interface NavbarProps {
 export default function Navbar({ variant = "landing" }: NavbarProps) {
   return (
     <header className="fixed top-0 z-50 w-full">
-      <nav className="glass mx-4 mt-4 rounded-2xl px-6 py-4 lg:mx-8" aria-label="Main navigation">
+      <nav className="glass mx-[10px] mt-4 rounded-2xl px-6 py-4 lg:mx-[10px]" aria-label="Main navigation">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2" aria-label="MindWell home">
             <Image src="/MindWell_logo.png" alt="MindWell" width={40} height={40} className="rounded-xl" />

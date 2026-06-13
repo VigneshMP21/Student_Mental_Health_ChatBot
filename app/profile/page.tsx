@@ -207,7 +207,7 @@ export default function ProfilePage() {
 
   return (
     <AppLayout>
-      <div className="max-w-full mx-auto space-y-8">
+      <div className="w-full space-y-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Profile Settings</h1>
           <p className="text-sm text-slate-500">Manage your account and preferences</p>

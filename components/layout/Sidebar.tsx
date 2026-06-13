@@ -104,7 +104,7 @@ export default function Sidebar() {
     <>
       {/* Mobile Floating Header */}
       <header className="fixed top-0 left-0 right-0 z-30 lg:hidden">
-        <div className="glass mx-4 mt-4 rounded-2xl px-6 py-3 flex items-center justify-between">
+        <div className="glass mx-[10px] mt-4 rounded-2xl px-6 py-3 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2">
             <Image src="/MindWell_logo.png" alt="MindWell" width={36} height={36} className="rounded-xl" />
             <span className="text-lg font-bold gradient-text">MindWell</span>
