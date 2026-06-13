@@ -71,13 +71,13 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-6xl mx-auto space-y-8 px-4 sm:px-0">
+      <div className="max-w-6xl mx-auto space-y-8 px-4 py-4 sm:px-6 lg:px-0">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
           <p className="text-sm text-slate-500">Your wellness overview at a glance</p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {statCards.map((card) => (
             <div key={card.label} className="card group hover:-translate-y-1">
               <div className="flex items-center justify-between mb-3">
@@ -91,7 +91,7 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
           <div className="card">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Weekly Mood Trends</h2>
             {moodChartData.length > 0 ? (
@@ -121,7 +121,7 @@ export default function DashboardPage() {
             <div className="space-y-3">
               {(data?.recentActivity || []).length > 0 ? (
                 data!.recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3 rounded-xl bg-slate-50 p-3">
+                  <div key={activity.id} className="flex flex-col sm:flex-row items-start gap-3 rounded-xl bg-slate-50 p-3">
                     <MessageCircle className="h-4 w-4 text-primary-500 mt-0.5 shrink-0" aria-hidden="true" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm text-slate-700 truncate">{activity.message}</p>
@@ -138,7 +138,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
           <Link href="/chat" className="card hover:-translate-y-1 text-center group">
             <MessageCircle className="h-8 w-8 text-primary-500 mx-auto mb-2 group-hover:scale-110 transition-transform" aria-hidden="true" />
             <p className="font-semibold text-slate-900">Start Chatting</p>
