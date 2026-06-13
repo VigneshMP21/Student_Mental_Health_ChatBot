@@ -5,11 +5,13 @@ import { useSearchParams } from "next/navigation";
 import AppLayout from "@/components/layout/AppLayout";
 import { ChatMessages } from "@/components/chat/ChatMessage";
 import ChatInput from "@/components/chat/ChatInput";
+import { useAuth } from "@/context/AuthContext";
 import type { ChatUIMessage } from "@/types";
 
 export default function ChatPage() {
   const searchParams = useSearchParams();
   const conversationIdParam = searchParams.get("conversation");
+  const { profile } = useAuth();
 
   const [messages, setMessages] = useState<ChatUIMessage[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(conversationIdParam);
@@ -143,6 +145,7 @@ export default function ChatPage() {
           <ChatMessages
             messages={messages}
             isLoading={isLoading}
+            userAvatar={profile?.avatar}
             onRegenerate={() => sendMessage("", true)}
           />
           <ChatInput

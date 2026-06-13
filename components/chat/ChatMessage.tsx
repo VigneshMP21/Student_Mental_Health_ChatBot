@@ -1,21 +1,23 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Copy, Check, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { TypingIndicator } from "@/components/ui/LoadingSpinner";
 import type { ChatUIMessage } from "@/types";
-import { cn } from "@/utils/helpers";
+import { cn, getInitials } from "@/utils/helpers";
 
-interface ChatMessageProps {
+interface ChatMessageBubbleProps {
   message: ChatUIMessage;
+  userAvatar?: string | null;
   onRegenerate?: () => void;
   isLast?: boolean;
 }
 
-export default function ChatMessageBubble({ message, onRegenerate, isLast }: ChatMessageProps) {
+function ChatMessageBubble({ message, userAvatar, onRegenerate, isLast }: ChatMessageBubbleProps) {
   const [copied, setCopied] = useState(false);
   const isUser = message.role === "user";
 
@@ -32,8 +34,8 @@ export default function ChatMessageBubble({ message, onRegenerate, isLast }: Cha
       aria-label={isUser ? "Your message" : "AI response"}
     >
       {!isUser && (
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 text-xs font-bold text-white">
-          AI
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 overflow-hidden">
+          <Image src="/MindWell_logo.png" alt="MindWell" width={32} height={32} className="h-8 w-8 object-contain" />
         </div>
       )}
 
@@ -80,8 +82,13 @@ export default function ChatMessageBubble({ message, onRegenerate, isLast }: Cha
       </div>
 
       {isUser && (
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-200 text-xs font-bold text-slate-600">
-          You
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden bg-gradient-to-br from-primary-400 to-accent-400 text-xs font-bold text-white">
+          {userAvatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={userAvatar} alt="" className="h-full w-full object-cover" />
+          ) : (
+            "You"
+          )}
         </div>
       )}
     </div>
@@ -91,10 +98,11 @@ export default function ChatMessageBubble({ message, onRegenerate, isLast }: Cha
 interface ChatMessagesProps {
   messages: ChatUIMessage[];
   isLoading: boolean;
+  userAvatar?: string | null;
   onRegenerate?: () => void;
 }
 
-export function ChatMessages({ messages, isLoading, onRegenerate }: ChatMessagesProps) {
+export function ChatMessages({ messages, isLoading, userAvatar, onRegenerate }: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -105,8 +113,8 @@ export function ChatMessages({ messages, isLoading, onRegenerate }: ChatMessages
     <div className="flex-1 overflow-y-auto scrollbar-thin px-4 py-6 space-y-6" role="log" aria-live="polite" aria-label="Chat messages">
       {messages.length === 0 && !isLoading && (
         <div className="flex flex-col items-center justify-center h-full text-center py-12">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-100 to-accent-100 mb-4">
-            <span className="text-2xl" role="img" aria-label="wave">👋</span>
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-100 to-accent-100 mb-4 overflow-hidden">
+            <Image src="/MindWell_logo.png" alt="MindWell" width={64} height={64} className="h-16 w-16 object-contain" />
           </div>
           <h2 className="text-lg font-semibold text-slate-900 mb-2">Hi there! I&apos;m MindWell</h2>
           <p className="text-sm text-slate-500 max-w-sm">
@@ -120,6 +128,7 @@ export function ChatMessages({ messages, isLoading, onRegenerate }: ChatMessages
         <ChatMessageBubble
           key={msg.id}
           message={msg}
+          userAvatar={userAvatar}
           isLast={i === messages.length - 1 && msg.role === "assistant"}
           onRegenerate={onRegenerate}
         />
@@ -127,8 +136,8 @@ export function ChatMessages({ messages, isLoading, onRegenerate }: ChatMessages
 
       {isLoading && (
         <div className="flex gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 text-xs font-bold text-white">
-            AI
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 overflow-hidden">
+            <Image src="/MindWell_logo.png" alt="MindWell" width={32} height={32} className="h-8 w-8 object-contain" />
           </div>
           <div className="rounded-2xl bg-white border border-slate-100 shadow-sm rounded-bl-md">
             <TypingIndicator />
