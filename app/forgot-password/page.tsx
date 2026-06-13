@@ -5,9 +5,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { validateEmail, validatePassword } from "@/utils/security";
 import Button from "@/components/ui/Button";
-import { Brain, Mail, ArrowLeft, KeyRound, Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Brain, Mail, ArrowLeft, KeyRound, Lock, Eye, EyeOff, CheckCircle, AlertTriangle } from "lucide-react";
 
-type ForgotStage = "email" | "otp" | "password" | "success";
+type ForgotStage = "email" | "otp" | "password";
 
 export default function ForgotPasswordPage() {
   const [stage, setStage] = useState<ForgotStage>("email");
@@ -18,6 +18,8 @@ export default function ForgotPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [alertMsg, setAlertMsg] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
 
@@ -27,6 +29,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError("");
     setMessage("");
+    setAlertMsg("");
 
     if (!validateEmail(normalizedEmail)) {
       setError("Please enter a valid email address");
@@ -40,6 +43,12 @@ export default function ForgotPasswordPage() {
       body: JSON.stringify({ email: normalizedEmail }),
     });
     const data: { error?: string } = await res.json().catch(() => ({}));
+
+    if (res.status === 404) {
+      setAlertMsg(data.error || "No account found with this email address.");
+      setLoading(false);
+      return;
+    }
 
     if (!res.ok) {
       setError(data.error || "Failed to send reset code");
@@ -110,21 +119,19 @@ export default function ForgotPasswordPage() {
     await supabase.auth.signOut();
     setPassword("");
     setConfirmPassword("");
-    setStage("success");
     setLoading(false);
+    setShowSuccess(true);
   };
 
   const getTitle = () => {
     if (stage === "otp") return "Verify OTP";
     if (stage === "password") return "Set new password";
-    if (stage === "success") return "Password changed";
     return "Forgot password";
   };
 
   const getSubtitle = () => {
     if (stage === "otp") return "Enter the code sent to your email";
     if (stage === "password") return "Choose a strong password for your account";
-    if (stage === "success") return "You can now sign in with your new password";
     return "Enter your account email to receive an OTP";
   };
 
@@ -149,169 +156,183 @@ export default function ForgotPasswordPage() {
           <p className="mt-2 text-sm text-slate-600">{getSubtitle()}</p>
         </div>
 
-        {stage === "success" ? (
-          <div className="glass rounded-2xl p-8 shadow-xl text-center">
+        <form
+          onSubmit={
+            stage === "email"
+              ? handleSendOtp
+              : stage === "otp"
+                ? handleVerifyOtp
+                : handleChangePassword
+          }
+          className="glass rounded-2xl p-8 shadow-xl space-y-5"
+          noValidate
+        >
+          {alertMsg && (
+            <div className="rounded-xl bg-orange-50 border border-orange-200 p-4 text-sm text-orange-800" role="alert">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0 text-orange-500" aria-hidden="true" />
+                <span>{alertMsg}</span>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700" role="alert">
+              {error}
+            </div>
+          )}
+
+          {message && (
+            <div className="rounded-xl bg-green-50 border border-green-200 p-3 text-sm text-green-700" role="status">
+              {message}
+            </div>
+          )}
+
+          {stage === "email" && (
+            <>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="input-field pl-10"
+                    placeholder="you@university.edu"
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+              </div>
+
+              <Button type="submit" loading={loading} className="w-full">
+                Send OTP
+              </Button>
+            </>
+          )}
+
+          {stage === "otp" && (
+            <>
+              <div>
+                <label htmlFor="otp" className="block text-sm font-medium text-slate-700 mb-1.5">
+                  OTP
+                </label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <input
+                    id="otp"
+                    type="text"
+                    inputMode="numeric"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    className="input-field pl-10 text-center"
+                    placeholder="000000"
+                    required
+                    autoComplete="one-time-code"
+                  />
+                </div>
+              </div>
+
+              <Button type="submit" loading={loading} className="w-full">
+                Verify OTP
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStage("email");
+                  setError("");
+                  setMessage("");
+                  setAlertMsg("");
+                  setOtp("");
+                }}
+                className="flex w-full items-center justify-center gap-2 text-sm text-primary-600 hover:text-primary-700"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Change email
+              </button>
+            </>
+          )}
+
+          {stage === "password" && (
+            <>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5">
+                  New Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input-field pl-10 pr-10"
+                    required
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
+                  <input
+                    id="confirmPassword"
+                    type={showPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="input-field pl-10"
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+              </div>
+
+              <Button type="submit" loading={loading} className="w-full">
+                Change Password
+              </Button>
+            </>
+          )}
+
+          <Link href="/login" className="flex items-center justify-center gap-2 text-sm text-primary-600 hover:text-primary-700">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Back to Sign In
+          </Link>
+        </form>
+      </div>
+
+      {showSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-2xl">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-600">
               <CheckCircle className="h-7 w-7" aria-hidden="true" />
             </div>
-            <p className="text-sm leading-6 text-slate-600 mb-6">
-              Your password has been updated successfully.
+            <h2 className="text-xl font-bold text-slate-900">Password changed</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Your password has been updated successfully. You can now sign in with your new password.
             </p>
-            <Link href="/login" className="btn-primary w-full">
+            <Link href="/login" className="btn-primary mt-6 w-full">
               Back to Sign In
             </Link>
           </div>
-        ) : (
-          <form
-            onSubmit={
-              stage === "email"
-                ? handleSendOtp
-                : stage === "otp"
-                  ? handleVerifyOtp
-                  : handleChangePassword
-            }
-            className="glass rounded-2xl p-8 shadow-xl space-y-5"
-            noValidate
-          >
-            {error && (
-              <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700" role="alert">
-                {error}
-              </div>
-            )}
-            {message && (
-              <div className="rounded-xl bg-green-50 border border-green-200 p-3 text-sm text-green-700" role="status">
-                {message}
-              </div>
-            )}
-
-            {stage === "email" && (
-              <>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Email
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
-                    <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="input-field pl-10"
-                      placeholder="you@university.edu"
-                      required
-                      autoComplete="email"
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" loading={loading} className="w-full">
-                  Send OTP
-                </Button>
-              </>
-            )}
-
-            {stage === "otp" && (
-              <>
-                <div>
-                  <label htmlFor="otp" className="block text-sm font-medium text-slate-700 mb-1.5">
-                    OTP
-                  </label>
-                  <div className="relative">
-                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
-                    <input
-                      id="otp"
-                      type="text"
-                      inputMode="numeric"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                      className="input-field pl-10 text-center"
-                      placeholder="000000"
-                      required
-                      autoComplete="one-time-code"
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" loading={loading} className="w-full">
-                  Verify OTP
-                </Button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStage("email");
-                    setError("");
-                    setMessage("");
-                    setOtp("");
-                  }}
-                  className="flex w-full items-center justify-center gap-2 text-sm text-primary-600 hover:text-primary-700"
-                >
-                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                  Change email
-                </button>
-              </>
-            )}
-
-            {stage === "password" && (
-              <>
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5">
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
-                    <input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="input-field pl-10 pr-10"
-                      required
-                      autoComplete="new-password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1.5">
-                    Confirm Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
-                    <input
-                      id="confirmPassword"
-                      type={showPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="input-field pl-10"
-                      required
-                      autoComplete="new-password"
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" loading={loading} className="w-full">
-                  Change Password
-                </Button>
-              </>
-            )}
-
-            <Link href="/login" className="flex items-center justify-center gap-2 text-sm text-primary-600 hover:text-primary-700">
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Back to Sign In
-            </Link>
-          </form>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
