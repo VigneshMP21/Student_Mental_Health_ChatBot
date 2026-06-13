@@ -126,7 +126,7 @@ export default function ChatPage() {
   if (!loaded) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-[60vh]">
+        <div className="flex flex-1 items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-200 border-t-primary-600" />
         </div>
       </AppLayout>
@@ -135,13 +135,13 @@ export default function ChatPage() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col min-h-[calc(100vh-4rem)] max-w-4xl mx-auto px-4 sm:px-0">
-        <div className="mb-4">
+      <div className="flex flex-col flex-1 w-full max-w-4xl mx-auto px-2 sm:px-0 min-h-0">
+        <div className="mb-4 shrink-0 mt-2 sm:mt-0">
           <h1 className="text-2xl font-bold text-slate-900">Wellness Chat</h1>
           <p className="text-sm text-slate-500">Your AI companion for emotional support</p>
         </div>
 
-        <div className="flex flex-1 flex-col glass rounded-2xl overflow-hidden min-h-0">
+        <div className="flex flex-1 flex-col glass rounded-2xl overflow-hidden min-h-0 shadow-lg">
           <ChatMessages
             messages={messages}
             isLoading={isLoading}
