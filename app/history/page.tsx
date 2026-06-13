@@ -92,7 +92,7 @@ export default function HistoryPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-4xl mx-auto space-y-6 px-4 sm:px-0">
+      <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Chat History</h1>
           <p className="text-sm text-slate-500">View and continue previous conversations</p>
@@ -121,11 +121,11 @@ export default function HistoryPage() {
         ) : filtered.length > 0 ? (
           <div className="space-y-3">
             {filtered.map((conv) => (
-              <div key={conv.id} className="card group flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div key={conv.id} className="card group flex flex-col gap-4 sm:flex-row sm:items-center overflow-hidden">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
                   <MessageCircle className="h-5 w-5" aria-hidden="true" />
                 </div>
-                <div className="min-w-0 flex-1 self-stretch sm:self-auto">
+                <div className="min-w-0 flex-1 w-full self-stretch sm:self-auto">
                   {editingId === conv.id ? (
                     <form
                       onSubmit={(e) => {
