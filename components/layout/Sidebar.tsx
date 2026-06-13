@@ -36,9 +36,18 @@ export default function Sidebar() {
 
   const NavContent = () => (
     <>
-      <div className="flex items-center gap-2 px-2 mb-8">
-        <Image src="/MindWell_logo.png" alt="MindWell" width={40} height={40} className="rounded-xl" />
-        <span className="text-lg font-bold gradient-text">MindWell</span>
+      <div className="flex items-center justify-between px-2 mb-8">
+        <div className="flex items-center gap-2">
+          <Image src="/MindWell_logo.png" alt="MindWell" width={40} height={40} className="rounded-xl" />
+          <span className="text-lg font-bold gradient-text">MindWell</span>
+        </div>
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+          aria-label="Close sidebar"
+        >
+          <X className="h-6 w-6 text-slate-500" />
+        </button>
       </div>
 
       <nav className="flex-1 space-y-1" aria-label="App navigation">
@@ -93,14 +102,22 @@ export default function Sidebar() {
 
   return (
     <>
-      <button
-        className="fixed top-4 right-4 z-50 rounded-xl glass p-2 lg:hidden"
-        onClick={() => setMobileOpen(!mobileOpen)}
-        aria-label={mobileOpen ? "Close menu" : "Open menu"}
-        aria-expanded={mobileOpen}
-      >
-        {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-      </button>
+      {/* Mobile Floating Header */}
+      <header className="fixed top-0 left-0 right-0 z-30 lg:hidden">
+        <div className="glass mx-4 mt-4 rounded-2xl px-6 py-3 flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Image src="/MindWell_logo.png" alt="MindWell" width={36} height={36} className="rounded-xl" />
+            <span className="text-lg font-bold gradient-text">MindWell</span>
+          </Link>
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="rounded-lg p-2 hover:bg-slate-100"
+            aria-label="Open menu"
+          >
+            <Menu className="h-6 w-6 text-slate-700" />
+          </button>
+        </div>
+      </header>
 
       {mobileOpen && (
         <div
