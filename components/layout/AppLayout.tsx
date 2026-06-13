@@ -5,7 +5,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="fixed inset-0 flex flex-col overflow-hidden">
       <Sidebar />
       <main className="flex-1 flex flex-col min-w-0 min-h-0 lg:pl-64">
-        <div className="flex-1 overflow-y-auto px-2 py-4 sm:p-4 pt-24 sm:pt-28 lg:p-8 lg:pt-8 flex flex-col">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-[10px] py-4 sm:p-4 pt-24 sm:pt-28 lg:p-8 lg:pt-8 flex flex-col">
           {children}
         </div>
       </main>
