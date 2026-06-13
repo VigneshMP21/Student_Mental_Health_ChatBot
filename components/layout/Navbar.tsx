@@ -83,18 +83,18 @@ function LandingNav() {
                 <X className="h-6 w-6" />
               </button>
             </div>
-            <div className="flex flex-col gap-2">
-              {["Features", "About", "Testimonials", "FAQ"].map((item) => (
-                <a
-                  key={item}
-                  href={`#${item.toLowerCase()}`}
-                  onClick={() => setMenuOpen(false)}
-                  className="rounded-xl px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-primary-600 transition-colors"
-                >
-                  {item}
-                </a>
-              ))}
-              <hr className="my-2 border-slate-200" />
+            {["Features", "About", "Testimonials", "FAQ"].map((item) => (
+              <a
+                key={item}
+                href={`#${item.toLowerCase()}`}
+                onClick={() => setMenuOpen(false)}
+                className="rounded-xl px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-primary-600 transition-colors"
+              >
+                {item}
+              </a>
+            ))}
+            <hr className="my-2 border-slate-200" />
+            <div className="mt-auto flex flex-col gap-3">
               <Link href="/login" onClick={() => setMenuOpen(false)} className="btn-secondary text-sm py-2">
                 Sign In
               </Link>
