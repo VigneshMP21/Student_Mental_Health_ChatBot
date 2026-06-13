@@ -45,6 +45,11 @@ function isConfirmedUser(user: { confirmed_at?: string | null; email_confirmed_a
   return Boolean(user.confirmed_at || user.email_confirmed_at);
 }
 
+async function checkPublicUserExists(supabase: SupabaseAdminClient, userId: string) {
+  const { data } = await supabase.from("users").select("id").eq("id", userId).maybeSingle();
+  return data !== null;
+}
+
 async function findAuthUserByEmail(supabase: SupabaseAdminClient, email: string) {
   const perPage = 1000;
   let page = 1;
@@ -164,7 +169,16 @@ export async function POST(request: NextRequest) {
     if (isAlreadyRegisteredError(error)) {
       const existingUser = await findAuthUserByEmail(supabase, email);
 
-      if (existingUser && !isConfirmedUser(existingUser)) {
+      if (existingUser) {
+        const hasPublicProfile = await checkPublicUserExists(supabase, existingUser.id);
+
+        if (hasPublicProfile && isConfirmedUser(existingUser)) {
+          return NextResponse.json(
+            { error: "An account with this email already exists. Please sign in or reset your password." },
+            { status: 409 }
+          );
+        }
+
         const { error: deleteError } = await supabase.auth.admin.deleteUser(existingUser.id);
 
         if (deleteError) {
@@ -184,13 +198,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (error) {
-      if (isAlreadyRegisteredError(error)) {
-        return NextResponse.json(
-          { error: "An account with this email already exists. Please sign in or reset your password." },
-          { status: 409 }
-        );
-      }
-
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
