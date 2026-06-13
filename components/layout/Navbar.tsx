@@ -73,7 +73,7 @@ function LandingNav() {
       {menuOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/30" onClick={() => setMenuOpen(false)} />
-          <div className="absolute right-0 top-0 flex h-full w-72 max-w-[80vw] flex-col bg-white rounded-l-2xl p-6 shadow-2xl animate-slide-up">
+          <div className="absolute right-0 top-0 flex h-full w-72 max-w-[80vw] flex-col rounded-l-2xl p-6 shadow-2xl animate-slide-up" style={{ backgroundColor: "#ffffff", backgroundImage: "none" }}>
             <div className="flex items-center justify-between mb-6">
               <Link href="/" className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
                 <Image src="/MindWell_logo.png" alt="MindWell" width={36} height={36} className="rounded-xl" />
