@@ -94,7 +94,7 @@ export default function Sidebar() {
   return (
     <>
       <button
-        className="fixed top-4 left-4 z-50 rounded-xl glass p-2 lg:hidden"
+        className="fixed top-4 right-4 z-50 rounded-xl glass p-2 lg:hidden"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label={mobileOpen ? "Close menu" : "Open menu"}
         aria-expanded={mobileOpen}
@@ -112,7 +112,7 @@ export default function Sidebar() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-white p-4 shadow-2xl transition-transform duration-300 lg:translate-x-0 lg:glass",
+          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-white p-4 shadow-2xl transition-transform duration-300 overflow-hidden lg:translate-x-0 lg:glass",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
         aria-label="Sidebar"
