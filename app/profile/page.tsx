@@ -26,10 +26,16 @@ export default function ProfilePage() {
   const [cropModal, setCropModal] = useState(false);
   const [rawImage, setRawImage] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [imgDims, setImgDims] = useState<{ w: number; h: number } | null>(null);
+  const dragRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
-  const viewportSize = 200;
+  const imgRef = useRef<HTMLImageElement>(null);
+  const cropAreaRef = useRef<HTMLDivElement>(null);
+  const viewportSize = 260;
 
   useEffect(() => {
     if (profile) {
@@ -45,35 +51,96 @@ export default function ProfilePage() {
     reader.onload = () => {
       setRawImage(reader.result as string);
       setScale(1);
+      setPanX(0);
+      setPanY(0);
+      setImgDims(null);
       setCropModal(true);
     };
     reader.readAsDataURL(file);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleCropConfirm = () => {
-    const img = imageRef.current;
-    const canvas = canvasRef.current;
-    if (!img || !canvas) return;
+  const handleImageLoad = () => {
+    const img = imgRef.current;
+    if (!img) return;
+    const natW = img.naturalWidth;
+    const natH = img.naturalHeight;
+    const aspect = natW / natH;
+    let w: number, h: number;
+    if (aspect >= 1) {
+      w = Math.max(viewportSize, viewportSize * aspect);
+      h = viewportSize;
+    } else {
+      w = viewportSize;
+      h = Math.max(viewportSize, viewportSize / aspect);
+    }
+    setImgDims({ w, h });
+  };
 
-    const size = viewportSize;
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    dragRef.current = { startX: e.clientX, startY: e.clientY, panX, panY };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    setPanX(dragRef.current.panX + dx);
+    setPanY(dragRef.current.panY + dy);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    dragRef.current = null;
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    setIsDragging(true);
+    dragRef.current = { startX: touch.clientX, startY: touch.clientY, panX, panY };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !dragRef.current) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - dragRef.current.startX;
+    const dy = touch.clientY - dragRef.current.startY;
+    setPanX(dragRef.current.panX + dx);
+    setPanY(dragRef.current.panY + dy);
+  };
+
+  const handleCropConfirm = () => {
+    const img = imgRef.current;
+    const canvas = canvasRef.current;
+    if (!img || !canvas || !imgDims) return;
+
+    const size = 256;
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const displayW = img.clientWidth;
-    const displayH = img.clientHeight;
-    const cropSize = Math.min(displayW, displayH);
-    const offsetX = (displayW - cropSize) / 2;
-    const offsetY = (displayH - cropSize) / 2;
-    const ratio = img.naturalWidth / displayW;
+    const { w, h } = imgDims;
+    const natW = img.naturalWidth;
+    const natH = img.naturalHeight;
 
-    ctx.drawImage(
-      img,
-      offsetX * ratio, offsetY * ratio, cropSize * ratio, cropSize * ratio,
-      0, 0, size, size
-    );
+    const visW = viewportSize / scale;
+    const visH = viewportSize / scale;
+
+    const imgCenterX = w / 2 - panX / scale;
+    const imgCenterY = h / 2 - panY / scale;
+
+    const natCropX = (imgCenterX - visW / 2) * (natW / w);
+    const natCropY = (imgCenterY - visH / 2) * (natH / h);
+    const natCropW = visW * (natW / w);
+    const natCropH = visH * (natH / h);
+
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(img, natCropX, natCropY, natCropW, natCropH, 0, 0, size, size);
 
     setAvatarUrl(canvas.toDataURL("image/jpeg", 0.9));
     setCropModal(false);
@@ -259,18 +326,42 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            <div
-              className="mx-auto overflow-hidden rounded-full border-4 border-white shadow-xl bg-slate-100"
-              style={{ width: viewportSize, height: viewportSize }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                ref={imageRef}
-                src={rawImage}
-                alt="Crop preview"
-                className="h-full w-full object-cover"
-                style={{ transform: `scale(${scale})`, objectPosition: "center" }}
-              />
+            <p className="text-sm text-slate-500 mb-4 text-center">Drag to reposition, use the slider to zoom</p>
+
+            <div className="relative mx-auto" style={{ width: viewportSize, height: viewportSize }}>
+              <div
+                ref={cropAreaRef}
+                className="relative h-full w-full overflow-hidden rounded-full bg-slate-100"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleMouseUp}
+                style={{ cursor: isDragging ? "grabbing" : "grab" }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  ref={imgRef}
+                  src={rawImage}
+                  alt="Crop preview"
+                  draggable={false}
+                  onLoad={handleImageLoad}
+                  className="pointer-events-none absolute"
+                  style={{
+                    left: "50%",
+                    top: "50%",
+                    width: imgDims ? imgDims.w : "100%",
+                    height: imgDims ? imgDims.h : "100%",
+                    transform: `translate(-50%, -50%) translate(${panX}px, ${panY}px) scale(${scale})`,
+                    willChange: "transform",
+                    userSelect: "none",
+                    maxWidth: "none",
+                  }}
+                />
+              </div>
+              <div className="pointer-events-none absolute inset-0 rounded-full border-4 border-white shadow-inner" />
             </div>
 
             <div className="mt-4 flex items-center gap-3">
