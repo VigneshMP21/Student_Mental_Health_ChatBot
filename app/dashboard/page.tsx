@@ -71,7 +71,7 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-6 lg:px-0 w-full overflow-hidden">
+      <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 w-full">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
           <p className="text-sm text-slate-500">Your wellness overview at a glance</p>
