@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   MessageCircle,
   Smile,
@@ -7,7 +8,6 @@ import {
   Shield,
   BarChart3,
   ArrowRight,
-  Brain,
 } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -126,9 +126,7 @@ export default function LandingPage() {
               <div className="relative animate-fade-in">
                 <div className="glass rounded-3xl p-8 shadow-2xl">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500">
-                      <Brain className="h-6 w-6 text-white" aria-hidden="true" />
-                    </div>
+                    <Image src="/MindWell_logo.png" alt="MindWell" width={48} height={48} className="rounded-2xl" />
                     <div>
                       <p className="font-semibold text-slate-900">MindWell AI</p>
                       <p className="text-xs text-green-600">Online • Ready to help</p>

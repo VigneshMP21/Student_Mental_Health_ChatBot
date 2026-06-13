@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { validateEmail, validatePassword } from "@/utils/security";
 import Button from "@/components/ui/Button";
-import { Brain, Mail, ArrowLeft, KeyRound, Lock, Eye, EyeOff, CheckCircle, AlertTriangle } from "lucide-react";
+import { Mail, ArrowLeft, KeyRound, Lock, Eye, EyeOff, CheckCircle, AlertTriangle } from "lucide-react";
 
 type ForgotStage = "email" | "otp" | "password";
 
@@ -148,9 +149,7 @@ export default function ForgotPasswordPage() {
 
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 text-white">
-              <Brain className="h-6 w-6" aria-hidden="true" />
-            </div>
+            <Image src="/MindWell_logo.png" alt="MindWell" width={48} height={48} className="rounded-2xl" />
           </Link>
           <h1 className="text-2xl font-bold text-slate-900">{getTitle()}</h1>
           <p className="mt-2 text-sm text-slate-600">{getSubtitle()}</p>

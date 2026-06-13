@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -11,7 +12,6 @@ import {
   History,
   User,
   LogOut,
-  Brain,
   Menu,
   X,
 } from "lucide-react";
@@ -37,9 +37,7 @@ export default function Sidebar() {
   const NavContent = () => (
     <>
       <div className="flex items-center gap-2 px-2 mb-8">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 text-white">
-          <Brain className="h-5 w-5" aria-hidden="true" />
-        </div>
+        <Image src="/MindWell_logo.png" alt="MindWell" width={40} height={40} className="rounded-xl" />
         <span className="text-lg font-bold gradient-text">MindWell</span>
       </div>
 
