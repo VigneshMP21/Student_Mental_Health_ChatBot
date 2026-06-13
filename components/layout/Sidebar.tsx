@@ -112,7 +112,7 @@ export default function Sidebar() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col glass p-4 transition-transform duration-300 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-white p-4 shadow-2xl transition-transform duration-300 lg:translate-x-0 lg:glass",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
         aria-label="Sidebar"
