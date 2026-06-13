@@ -13,15 +13,33 @@ function normalizeBaseUrl(url?: string) {
   return withProtocol.endsWith("/") ? withProtocol : `${withProtocol}/`;
 }
 
-export function getAppUrl(path = "") {
-  const baseUrl =
+function isLocalBaseUrl(url: string) {
+  try {
+    const hostname = new URL(url).hostname;
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+  } catch {
+    return false;
+  }
+}
+
+export function getAppUrl(path = "", requestOrigin?: string) {
+  const configuredBaseUrl =
     normalizeBaseUrl(process.env.NEXT_PUBLIC_APP_URL) ||
     normalizeBaseUrl(process.env.NEXT_PUBLIC_SITE_URL) ||
     normalizeBaseUrl(process.env.NEXT_PUBLIC_VERCEL_URL) ||
-    normalizeBaseUrl(process.env.VERCEL_URL) ||
+    normalizeBaseUrl(process.env.VERCEL_URL);
+  const requestBaseUrl = normalizeBaseUrl(requestOrigin);
+  const browserBaseUrl =
     (typeof window !== "undefined"
       ? normalizeBaseUrl(window.location.origin)
-      : "http://localhost:3000/");
+      : "");
+
+  const baseUrl =
+    requestBaseUrl &&
+    !isLocalBaseUrl(requestBaseUrl) &&
+    (!configuredBaseUrl || isLocalBaseUrl(configuredBaseUrl))
+      ? requestBaseUrl
+      : configuredBaseUrl || requestBaseUrl || browserBaseUrl || "http://localhost:3000/";
 
   return new URL(path.replace(/^\//, ""), baseUrl).toString();
 }

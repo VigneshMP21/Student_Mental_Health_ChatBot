@@ -13,6 +13,8 @@ const registerSchema = z.object({
   password: z.string(),
 });
 
+type SupabaseAdminClient = ReturnType<typeof createAdminClient>;
+
 function getPublicError(error: unknown) {
   const message = error instanceof Error ? error.message : "";
 
@@ -24,14 +26,118 @@ function getPublicError(error: unknown) {
     return "Email service is not configured. Check SMTP and Supabase service-role environment variables.";
   }
 
+  if (
+    message.includes("relation \"public.users\" does not exist") ||
+    message.includes("relation \"public.wellness_streaks\" does not exist")
+  ) {
+    return "Database tables are not configured. Run supabase/schema.sql in the Supabase SQL Editor.";
+  }
+
   return "Failed to create account. Please try again.";
+}
+
+function isAlreadyRegisteredError(error: unknown) {
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+  return message.includes("already") && message.includes("registered");
+}
+
+function isConfirmedUser(user: { confirmed_at?: string | null; email_confirmed_at?: string | null }) {
+  return Boolean(user.confirmed_at || user.email_confirmed_at);
+}
+
+async function findAuthUserByEmail(supabase: SupabaseAdminClient, email: string) {
+  const perPage = 1000;
+  let page = 1;
+
+  while (page) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
+
+    if (error) {
+      throw error;
+    }
+
+    const user = data.users.find(
+      (candidate) => candidate.email?.toLowerCase() === email
+    );
+
+    if (user || !data.nextPage) {
+      return user ?? null;
+    }
+
+    page = data.nextPage;
+  }
+
+  return null;
+}
+
+async function createSignupVerificationLink({
+  supabase,
+  email,
+  name,
+  password,
+  redirectToUrl,
+}: {
+  supabase: SupabaseAdminClient;
+  email: string;
+  name: string;
+  password: string;
+  redirectToUrl: string;
+}) {
+  return supabase.auth.admin.generateLink({
+    type: "signup",
+    email,
+    password,
+    options: {
+      data: { name },
+      redirectTo: redirectToUrl,
+    },
+  });
+}
+
+async function ensureUserRecords({
+  supabase,
+  userId,
+  name,
+  email,
+}: {
+  supabase: SupabaseAdminClient;
+  userId: string;
+  name: string;
+  email: string;
+}) {
+  const { error: profileError } = await supabase.from("users").upsert(
+    {
+      id: userId,
+      name,
+      email,
+    },
+    { onConflict: "id" }
+  );
+
+  if (profileError) {
+    throw profileError;
+  }
+
+  const { error: streakError } = await supabase.from("wellness_streaks").upsert(
+    {
+      user_id: userId,
+      current_streak: 0,
+      longest_streak: 0,
+    },
+    { onConflict: "user_id" }
+  );
+
+  if (streakError) {
+    throw streakError;
+  }
 }
 
 export async function POST(request: NextRequest) {
   let createdUserId: string | undefined;
-  const supabase = createAdminClient();
+  let supabase: SupabaseAdminClient | undefined;
 
   try {
+    supabase = createAdminClient();
     const body = await request.json();
     const parsed = registerSchema.safeParse(body);
 
@@ -46,20 +152,45 @@ export async function POST(request: NextRequest) {
 
     const name = sanitizeInput(parsed.data.name);
     const email = parsed.data.email.toLowerCase();
-    const redirectToUrl = getAppUrl("/login");
-    console.log("Register generateLink redirect URL:", redirectToUrl);
-    const { data, error } = await supabase.auth.admin.generateLink({
-      type: "signup",
+    const redirectToUrl = getAppUrl("/login", request.nextUrl.origin);
+    let { data, error } = await createSignupVerificationLink({
+      supabase,
       email,
+      name,
       password: parsed.data.password,
-      options: {
-        data: { name },
-        redirectTo: redirectToUrl,
-      },
+      redirectToUrl,
     });
-    console.log("Register generated action_link:", data?.properties?.action_link);
+
+    if (isAlreadyRegisteredError(error)) {
+      const existingUser = await findAuthUserByEmail(supabase, email);
+
+      if (existingUser && !isConfirmedUser(existingUser)) {
+        const { error: deleteError } = await supabase.auth.admin.deleteUser(existingUser.id);
+
+        if (deleteError) {
+          throw deleteError;
+        }
+
+        const retry = await createSignupVerificationLink({
+          supabase,
+          email,
+          name,
+          password: parsed.data.password,
+          redirectToUrl,
+        });
+        data = retry.data;
+        error = retry.error;
+      }
+    }
 
     if (error) {
+      if (isAlreadyRegisteredError(error)) {
+        return NextResponse.json(
+          { error: "An account with this email already exists. Please sign in or reset your password." },
+          { status: 409 }
+        );
+      }
+
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
@@ -68,6 +199,13 @@ export async function POST(request: NextRequest) {
     }
 
     createdUserId = data.user.id;
+
+    await ensureUserRecords({
+      supabase,
+      userId: createdUserId,
+      name,
+      email,
+    });
 
     await sendAuthEmail({
       to: email,
@@ -80,7 +218,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (createdUserId) {
+    if (createdUserId && supabase) {
       const { error: deleteError } = await supabase.auth.admin.deleteUser(createdUserId);
       if (deleteError) {
         console.error("Failed to roll back unverified signup:", deleteError);

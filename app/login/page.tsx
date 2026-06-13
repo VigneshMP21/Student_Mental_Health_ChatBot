@@ -27,10 +27,20 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
 
-    if (authError) {
-      setError(authError.message);
+    if (authError || !data.user || !data.session) {
+      setError("Invalid email or password");
+      setLoading(false);
+      return;
+    }
+
+    if (!data.user.email_confirmed_at) {
+      await supabase.auth.signOut();
+      setError("Please verify your email before signing in.");
       setLoading(false);
       return;
     }
