@@ -68,8 +68,8 @@ export default function ForgotPasswordPage() {
     setMessage("");
 
     const token = otp.trim();
-    if (token.length < 6) {
-      setError("Please enter the OTP from your email");
+    if (token.length < 8) {
+      setError("Please enter the 8-digit OTP from your email");
       return;
     }
 
@@ -228,9 +228,9 @@ export default function ForgotPasswordPage() {
                     type="text"
                     inputMode="numeric"
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "")      .slice(0, 8))}
                     className="input-field pl-10 text-center"
-                    placeholder="000000"
+                    placeholder="00000000"
                     required
                     autoComplete="one-time-code"
                   />
