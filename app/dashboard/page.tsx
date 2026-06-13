@@ -71,13 +71,13 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-6xl mx-auto space-y-8 px-4 py-4 sm:px-6 lg:px-0">
+      <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-6 lg:px-0 w-full overflow-hidden">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
           <p className="text-sm text-slate-500">Your wellness overview at a glance</p>
         </div>
 
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           {statCards.map((card) => (
             <div key={card.label} className="card group hover:-translate-y-1">
               <div className="flex items-center justify-between mb-3">
@@ -92,28 +92,30 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-          <div className="card">
+          <div className="card min-w-0 overflow-hidden">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Weekly Mood Trends</h2>
-            {moodChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={moodChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                  <YAxis domain={[0, 5]} tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Bar dataKey="score" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-[250px] text-slate-400">
-                <Smile className="h-8 w-8 mb-2" aria-hidden="true" />
-                <p className="text-sm">No mood data yet</p>
-                <Link href="/mood" className="text-sm text-primary-600 mt-2 hover:underline">Log your mood</Link>
-              </div>
-            )}
+            <div className="w-full h-[250px]">
+              {moodChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={moodChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                    <YAxis domain={[0, 5]} tick={{ fontSize: 10 }} />
+                    <Tooltip />
+                    <Bar dataKey="score" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                  <Smile className="h-8 w-8 mb-2" aria-hidden="true" />
+                  <p className="text-sm">No mood data yet</p>
+                  <Link href="/mood" className="text-sm text-primary-600 mt-2 hover:underline">Log your mood</Link>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="card">
+          <div className="card min-w-0 overflow-hidden">
             <div className="flex items-center gap-2 mb-4">
               <Activity className="h-5 w-5 text-primary-600" aria-hidden="true" />
               <h2 className="text-lg font-semibold text-slate-900">Recent Activity</h2>
@@ -121,10 +123,10 @@ export default function DashboardPage() {
             <div className="space-y-3">
               {(data?.recentActivity || []).length > 0 ? (
                 data!.recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex flex-col sm:flex-row items-start gap-3 rounded-xl bg-slate-50 p-3">
-                    <MessageCircle className="h-4 w-4 text-primary-500 mt-0.5 shrink-0" aria-hidden="true" />
+                  <div key={activity.id} className="flex items-start gap-3 rounded-xl bg-slate-50 p-3">
+                    <MessageCircle className="h-4 w-4 text-primary-500 mt-1 shrink-0" aria-hidden="true" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-slate-700 truncate">{activity.message}</p>
+                      <p className="text-sm text-slate-700 break-words whitespace-normal">{activity.message}</p>
                       <p className="text-xs text-slate-400 mt-1">
                         {formatDate(activity.created_at)} at {formatTime(activity.created_at)}
                       </p>

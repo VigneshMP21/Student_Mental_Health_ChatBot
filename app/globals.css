@@ -39,7 +39,7 @@
   }
 
   .card {
-    @apply glass rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl;
+    @apply glass rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:shadow-2xl;
   }
 
   .section-title {
