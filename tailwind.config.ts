@@ -30,12 +30,22 @@ const config: Config = {
       animation: {
         "fade-in": "fadeIn 0.5s ease-out",
         "slide-up": "slideUp 0.5s ease-out",
+        "slide-up-sm": "slideUp 0.3s ease-out",
         "pulse-soft": "pulseSoft 2s ease-in-out infinite",
         "float": "float 6s ease-in-out infinite",
         "float-slow": "float 8s ease-in-out infinite",
         "float-delayed": "float 6s ease-in-out 3s infinite",
         "glow-pulse": "glowPulse 2s ease-in-out infinite",
         "scale-in": "scaleIn 0.5s ease-out",
+        "bounce-in": "bounceIn 0.5s ease-out",
+        "bounce-in-sm": "bounceIn 0.3s ease-out",
+        "slide-in-right": "slideInRight 0.4s ease-out",
+        "shimmer": "shimmer 2s infinite linear",
+        "spin-slow": "spin 8s linear infinite",
+        "count-up": "countUp 0.6s ease-out",
+        "morph": "morph 8s ease-in-out infinite",
+        "stagger-fade": "staggerFade 0.5s ease-out both",
+        "wiggle": "wiggle 0.3s ease-in-out",
       },
       keyframes: {
         fadeIn: {
@@ -61,6 +71,33 @@ const config: Config = {
         scaleIn: {
           "0%": { opacity: "0", transform: "scale(0.95)" },
           "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        bounceIn: {
+          "0%": { opacity: "0", transform: "scale(0.3)" },
+          "50%": { transform: "scale(1.05)" },
+          "70%": { transform: "scale(0.9)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        slideInRight: {
+          "0%": { opacity: "0", transform: "translateX(30px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        staggerFade: {
+          "0%": { opacity: "0", transform: "translateY(16px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        wiggle: {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "25%": { transform: "rotate(-5deg)" },
+          "75%": { transform: "rotate(5deg)" },
+        },
+        morph: {
+          "0%, 100%": { borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%" },
+          "50%": { borderRadius: "30% 60% 70% 40% / 50% 60% 30% 60%" },
         },
       },
       backdropBlur: {
