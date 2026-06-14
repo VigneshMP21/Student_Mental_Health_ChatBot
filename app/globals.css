@@ -43,7 +43,17 @@
   }
 
   .section-title {
-    @apply text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl;
+    @apply text-4xl font-black tracking-tight text-slate-950 sm:text-5xl;
+  }
+
+  .section-kicker {
+    @apply inline-flex items-center gap-2 text-xs font-black uppercase text-primary-600;
+    letter-spacing: 0.24em;
+  }
+
+  .section-kicker::before {
+    content: '';
+    @apply h-2 w-2 rounded-full bg-primary-500 shadow-lg shadow-primary-500/30;
   }
 
   .gradient-text {
@@ -208,4 +218,194 @@ details.card[open] {
 
 .prose-chat a {
   @apply text-primary-600 underline hover:text-primary-700;
+}
+
+/* Landing page atmosphere */
+.mindwell-ambient {
+  background:
+    radial-gradient(circle at 15% 12%, rgba(96, 165, 250, 0.26), transparent 34%),
+    radial-gradient(circle at 82% 18%, rgba(167, 139, 250, 0.24), transparent 32%),
+    radial-gradient(circle at 55% 76%, rgba(45, 212, 191, 0.16), transparent 36%),
+    linear-gradient(135deg, #f8fbff 0%, #eef6ff 44%, #f7f2ff 100%);
+}
+
+.mindwell-grid {
+  background-image:
+    linear-gradient(rgba(37, 99, 235, 0.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.075) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at center, black, transparent 78%);
+}
+
+.command-shine::before,
+.testimonial-sheen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.48) 42%, transparent 56%);
+  transform: translateX(-120%);
+  animation: shimmerSweep 6s ease-in-out infinite;
+}
+
+.testimonial-sheen::before {
+  animation-delay: 1.5s;
+  opacity: 0.45;
+}
+
+.orbit-shell {
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3), transparent 64%);
+  animation: orbitSpin 32s linear infinite;
+  pointer-events: none;
+}
+
+.orbit-shell::before,
+.orbit-shell::after {
+  content: '';
+  position: absolute;
+  border-radius: 9999px;
+  border: 1px solid rgba(124, 58, 237, 0.12);
+}
+
+.orbit-shell::before {
+  inset: 4.25rem;
+}
+
+.orbit-shell::after {
+  inset: 8.5rem;
+  border-color: rgba(6, 182, 212, 0.15);
+}
+
+.orbit-node {
+  position: absolute;
+  z-index: 1;
+  height: 0.95rem;
+  width: 0.95rem;
+  border-radius: 9999px;
+  box-shadow: 0 0 32px currentColor;
+}
+
+.orbit-node-one {
+  left: 18%;
+  top: 19%;
+  background: #22d3ee;
+  color: rgba(34, 211, 238, 0.58);
+}
+
+.orbit-node-two {
+  right: 13%;
+  top: 38%;
+  background: #a78bfa;
+  color: rgba(167, 139, 250, 0.58);
+}
+
+.orbit-node-three {
+  bottom: 15%;
+  left: 36%;
+  background: #34d399;
+  color: rgba(52, 211, 153, 0.58);
+}
+
+.breathing-orb {
+  animation: breatheOrb 3.8s ease-in-out infinite;
+}
+
+.data-rise {
+  transform-origin: bottom;
+  animation: dataRise 1.8s ease-out both;
+}
+
+.soft-scan {
+  animation: softScan 4.5s ease-in-out infinite;
+}
+
+.flow-rail::after {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: 0;
+  height: 42px;
+  width: 7px;
+  border-radius: 9999px;
+  background: linear-gradient(to bottom, #38bdf8, #8b5cf6);
+  box-shadow: 0 0 24px rgba(59, 130, 246, 0.45);
+  animation: railPulse 4s ease-in-out infinite;
+}
+
+@keyframes shimmerSweep {
+  0%, 46% {
+    transform: translateX(-120%);
+  }
+  72%, 100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes orbitSpin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes breatheOrb {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.25);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 16px rgba(52, 211, 153, 0);
+    transform: scale(1.06);
+  }
+}
+
+@keyframes dataRise {
+  from {
+    transform: scaleY(0.18);
+    opacity: 0.35;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes softScan {
+  0%, 100% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateY(22rem);
+  }
+}
+
+@keyframes railPulse {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(320px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-blob,
+  .glow-pulse,
+  .typing-dot,
+  .orbit-shell,
+  .breathing-orb,
+  .data-rise,
+  .soft-scan,
+  .flow-rail::after,
+  .command-shine::before,
+  .testimonial-sheen::before {
+    animation: none !important;
+  }
+
+  .command-shine::before,
+  .testimonial-sheen::before {
+    opacity: 0;
+  }
 }
